@@ -3,7 +3,7 @@ name: metrabs
 channels:
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.10
   - pip
   - cachetools
   - cython
@@ -44,7 +44,6 @@ dependencies:
     - git+https://github.com/isarandi/cameralib.git
     - git+https://github.com/isarandi/boxlib.git
     - git+https://github.com/isarandi/poseviz.git
-    - git+https://github.com/isarandi/smpl.git
     - git+https://github.com/isarandi/simplepyutils.git
     - git+https://github.com/isarandi/tf-parallel-map.git
     - git+https://github.com/isarandi/BareCat.git
