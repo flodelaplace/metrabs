@@ -1,5 +1,9 @@
 import sys
+import os
+import json
 import urllib.request
+from datetime import datetime
+from pathlib import Path
 
 import tensorflow as tf
 import tensorflow_hub as tfhub
@@ -42,7 +46,9 @@ def main():
         output_signature=tf.TensorSpec(shape=(imshape[0], imshape[1], 3), dtype=tf.uint8)
     ).batch(8).prefetch(1)
 
-    all_poses3d = []  # Liste qui va stocker les poses de toute la vidéo
+    all_poses3d = []
+    all_poses2d = []
+    all_confidences = []
 
     if USE_POSEVIZ:
         viz = poseviz.PoseViz(joint_names, joint_edges)
@@ -53,20 +59,32 @@ def main():
             skeleton=skeleton)
         
         # On extrait les poses image par image dans le batch
-        for frame, boxes, poses in zip(frame_batch, pred['boxes'], pred['poses3d']):
-            # poses.numpy() est un tableau de taille (Nb_personnes, 87, 3)
-            all_poses3d.append(poses.numpy())
-            
+        for frame, boxes, poses3d, poses2d in zip(
+                frame_batch, pred['boxes'], pred['poses3d'], pred['poses2d']):
+            all_poses3d.append(poses3d.numpy())
+            all_poses2d.append(poses2d.numpy())
+            # confidence = 5e colonne des boxes (par personne détectée)
+            all_confidences.append(boxes.numpy()[:, 4] if len(boxes) > 0 else np.array([]))
+
             if USE_POSEVIZ:
-                viz.update(frame=frame, boxes=boxes, poses=poses, camera=camera)
+                viz.update(frame=frame, boxes=boxes, poses=poses3d, camera=camera)
 
     if USE_POSEVIZ:
         viz.close()
 
-    # Sauvegarde finale
-    output_filename = "poses3d_output.trc"
-    save_to_trc(output_filename, all_poses3d, joint_names, fps)
-    print(f"\nTerminé ! Les coordonnées 3D sont sauvegardées dans : {output_filename}")
+    # Créer le dossier de sortie : output/<nom_video>_<datetime>/
+    video_name = Path(video_filepath).stem
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = Path("output") / f"{video_name}_{timestamp}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sauvegarde
+    save_to_trc(output_dir / "poses3d.trc", all_poses3d, joint_names, fps)
+    save_to_json(output_dir / "results.json", all_poses3d, all_poses2d, all_confidences, joint_names, fps)
+
+    print(f"\nTerminé ! Résultats sauvegardés dans : {output_dir}/")
+    print(f"  - poses3d.trc (biomécanique/OpenSim)")
+    print(f"  - results.json (poses3d, poses2d, confidences)")
 
 
 def get_video(source, temppath='/tmp/video.mp4'):
@@ -79,37 +97,63 @@ def get_video(source, temppath='/tmp/video.mp4'):
     urllib.request.urlretrieve(source, temppath)
     return temppath
 
+def save_to_json(filepath, all_poses3d, all_poses2d, all_confidences, joint_names, fps):
+    """Sauvegarde toutes les données dans un seul fichier JSON lisible."""
+    data = {
+        "fps": fps,
+        "joint_names": joint_names.tolist(),
+        "frames": []
+    }
+    for i, (p3d, p2d, conf) in enumerate(zip(all_poses3d, all_poses2d, all_confidences)):
+        frame_data = {
+            "frame": i + 1,
+            "time": round(i / fps, 5),
+            "num_persons": len(p3d),
+            "persons": []
+        }
+        for j in range(len(p3d)):
+            frame_data["persons"].append({
+                "confidence": round(float(conf[j]), 4) if j < len(conf) else None,
+                "poses3d": p3d[j].tolist(),
+                "poses2d": p2d[j].tolist(),
+            })
+        data["frames"].append(frame_data)
+
+    with open(filepath, 'w') as f:
+        json.dump(data, f)
+
+
 def save_to_trc(filepath, poses3d, joint_names, fps=30.0):
     """Sauvegarde les poses au format TRC (Track Row Column) pour la biomécanique (ex: OpenSim)."""
     num_frames = len(poses3d)
     num_markers = len(joint_names)
-    
+
     with open(filepath, 'w') as f:
-        # En-tête TRC (Lignes 1 à 3)
+        # En-tête TRC (Lignes 1 à 6)
         f.write(f"PathFileType\t4\t(X/Y/Z)\t{filepath}\n")
         f.write("DataRate\tCameraRate\tNumFrames\tNumMarkers\tUnits\tOrigDataRate\tOrigDataStartFrame\tOrigNumFrames\n")
         f.write(f"{fps}\t{fps}\t{num_frames}\t{num_markers}\tmm\t{fps}\t1\t{num_frames}\n")
-        
+
         # Noms des marqueurs (Ligne 4)
         f.write("Frame#\tTime\t")
         for name in joint_names:
             f.write(f"{name}\t\t\t")
         f.write("\n")
-        
+
         # Axes X, Y, Z (Ligne 5)
         f.write("\t\t")
         for _ in range(num_markers):
             f.write("X\tY\tZ\t")
         f.write("\n\n")
-        
+
         # Données frame par frame
         for i, frame_poses in enumerate(poses3d):
             t = i / fps
             f.write(f"{i+1}\t{t:.5f}\t")
-            
+
             # On extrait la première personne détectée. Si personne, des zéros.
             pose = frame_poses[0] if len(frame_poses) > 0 else np.zeros((num_markers, 3))
-            
+
             for j in range(num_markers):
                 x, y, z = pose[j]
                 f.write(f"{x:.3f}\t{y:.3f}\t{z:.3f}\t")
