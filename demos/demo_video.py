@@ -72,6 +72,9 @@ def main():
     if USE_POSEVIZ:
         viz.close()
 
+    # Post-processing: reorient to Y-up and ground-calibrate feet
+    all_poses3d = reorient_and_ground(all_poses3d, joint_names)
+
     # Créer le dossier de sortie : output/<nom_video>_<datetime>/
     video_name = Path(video_filepath).stem
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -96,6 +99,34 @@ def get_video(source, temppath='/tmp/video.mp4'):
     urllib.request.install_opener(opener)
     urllib.request.urlretrieve(source, temppath)
     return temppath
+
+def reorient_and_ground(all_poses3d, joint_names):
+    """Reorient poses from camera frame (Y-down) to OpenSim convention (Y-up),
+    and offset vertically so that feet touch the ground (Y=0)."""
+    # Step 1: Flip Y axis (camera Y-down -> Y-up)
+    for i in range(len(all_poses3d)):
+        if len(all_poses3d[i]) > 0:
+            all_poses3d[i][:, :, 1] *= -1
+
+    # Step 2: Find foot joint indices
+    foot_joints = [j for j, name in enumerate(joint_names)
+                   if 'toe' in name.lower() or 'heel' in name.lower() or 'ankle' in name.lower()]
+
+    # Step 3: Find the minimum Y value across all foot joints and all frames (= ground level)
+    foot_y_values = []
+    for frame_poses in all_poses3d:
+        if len(frame_poses) > 0:
+            # First person only (consistent with TRC export)
+            foot_y_values.append(frame_poses[0][foot_joints, 1].min())
+
+    if foot_y_values:
+        ground_level = np.percentile(foot_y_values, 5)  # 5th percentile to be robust to noise
+        for i in range(len(all_poses3d)):
+            if len(all_poses3d[i]) > 0:
+                all_poses3d[i][:, :, 1] -= ground_level
+
+    return all_poses3d
+
 
 def save_to_json(filepath, all_poses3d, all_poses2d, all_confidences, joint_names, fps):
     """Sauvegarde toutes les données dans un seul fichier JSON lisible."""
