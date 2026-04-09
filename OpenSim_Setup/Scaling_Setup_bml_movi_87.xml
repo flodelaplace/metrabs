@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<OpenSimDocument Version="40500">
+	<ScaleTool name="Pose2Sim_scaled">
+		<mass>69</mass>
+		<height>-1</height>
+		<age>-1</age>
+		<notes>Scaling setup for MeTRAbs bml_movi_87 skeleton</notes>
+		<GenericModelMaker>
+			<model_file>Unassigned</model_file>
+			<marker_set_file>Unassigned</marker_set_file>
+		</GenericModelMaker>
+		<ModelScaler>
+			<apply>true</apply>
+			<scaling_order> measurements</scaling_order>
+			<MeasurementSet>
+				<objects>
+
+					<!-- FOOT: heel-to-toe and heel-to-5th metatarsal -->
+					<Measurement name="foot">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rhee rtoe</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> rhee rfifthmetatarsal</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lhee ltoe</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lhee lfifthmetatarsal</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="talus_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="calcn_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="toes_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="talus_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="calcn_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="toes_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- RIGHT TIBIA: knee-to-ankle (lateral and medial pairs) -->
+					<Measurement name="tibia_r">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rknem rankm</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> rinnerknee rank</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="tibia_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- LEFT TIBIA -->
+					<Measurement name="tibia_l">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> lknem lankm</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> linnerknee lank</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="tibia_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- RIGHT FEMUR: hip joint center to knee -->
+					<Measurement name="femur_r">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rhip rknem</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="femur_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="patella_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- LEFT FEMUR -->
+					<Measurement name="femur_l">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> lhip lknem</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="femur_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="patella_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- PELVIS XY: ASIS-PSIS depth -->
+					<Measurement name="pelvisXY">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rasis rpsis</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lasis lpsis</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="pelvis">
+									<axes> X Y</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- PELVIS Z: inter-hip width -->
+					<Measurement name="pelvisZ">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rhip lhip</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="pelvis">
+									<axes> Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- TORSO XY: shoulder-to-PSIS and C7-to-PSIS -->
+					<Measurement name="torsoXY">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rshom rpsis</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lshom lpsis</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> backneck rpsis</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> backneck lpsis</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="torso">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="scapulaPhantom_r">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="scapulaPhantom_l">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="lumbar5">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="lumbar4">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="lumbar3">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="lumbar2">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="lumbar1">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="Abdomen">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="head">
+									<axes> X Y</axes>
+								</BodyScale>
+								<BodyScale name="sacrum">
+									<axes> X Y</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- TORSO Z: inter-shoulder width -->
+					<Measurement name="torsoZ">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rshom lshom</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="torso">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="scapulaPhantom_r">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="scapulaPhantom_l">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="lumbar5">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="lumbar4">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="lumbar3">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="lumbar2">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="lumbar1">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="Abdomen">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="head">
+									<axes> Z</axes>
+								</BodyScale>
+								<BodyScale name="sacrum">
+									<axes> Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- HUMERUS: shoulder-to-elbow (lateral and medial) -->
+					<Measurement name="humerus">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> rshom relbm</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> rshom relbinner</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lshom lelbm</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lshom lelbinner</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="humerus_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="humerus_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+					<!-- RADIUS/ULNA/HAND: elbow-to-wrist (radial and ulnar) -->
+					<Measurement name="radius">
+						<apply>true</apply>
+						<MarkerPairSet>
+							<objects>
+								<MarkerPair>
+									<markers> relbm rwrithumbside</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> relbinner rwripinkieside</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lelbm lwrithumbside</markers>
+								</MarkerPair>
+								<MarkerPair>
+									<markers> lelbinner lwripinkieside</markers>
+								</MarkerPair>
+							</objects>
+							<groups />
+						</MarkerPairSet>
+						<BodyScaleSet>
+							<objects>
+								<BodyScale name="ulna_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="radius_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="hand_r">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="ulna_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="radius_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+								<BodyScale name="hand_l">
+									<axes> X Y Z</axes>
+								</BodyScale>
+							</objects>
+							<groups />
+						</BodyScaleSet>
+					</Measurement>
+
+				</objects>
+				<groups />
+			</MeasurementSet>
+			<ScaleSet>
+				<objects />
+				<groups />
+			</ScaleSet>
+			<marker_file>Unassigned</marker_file>
+			<time_range> 0 1.0</time_range>
+			<preserve_mass_distribution>true</preserve_mass_distribution>
+			<output_model_file>Unassigned</output_model_file>
+		</ModelScaler>
+		<MarkerPlacer>
+			<apply>false</apply>
+		</MarkerPlacer>
+	</ScaleTool>
+</OpenSimDocument>

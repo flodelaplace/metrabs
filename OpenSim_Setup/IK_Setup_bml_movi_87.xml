@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<OpenSimDocument Version="40000">
+	<InverseKinematicsTool>
+		<results_directory>./</results_directory>
+		<model_file>Unassigned</model_file>
+		<constraint_weight>Inf</constraint_weight>
+		<accuracy>1e-05</accuracy>
+		<time_range>0 1.0</time_range>
+		<output_motion_file>Unassigned</output_motion_file>
+		<report_errors>true</report_errors>
+		<IKTaskSet>
+			<objects>
+
+				<!-- ============================================ -->
+				<!-- HEAD: low weight (less reliable from video)  -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="head">
+					<apply>true</apply>
+					<weight>0.5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfronthead">
+					<apply>true</apply>
+					<weight>0.5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfronthead">
+					<apply>true</apply>
+					<weight>0.5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lbackhead">
+					<apply>true</apply>
+					<weight>0.5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rbackhead">
+					<apply>true</apply>
+					<weight>0.5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lcheek">
+					<apply>true</apply>
+					<weight>0.2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rcheek">
+					<apply>true</apply>
+					<weight>0.2</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- TORSO: medium weight                         -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="backneck">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="upperback">
+					<apply>true</apply>
+					<weight>3</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="clavicle">
+					<apply>true</apply>
+					<weight>3</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="sternum">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="umbilicus">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lback">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rback">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lscapula">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rscapula">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lbreast">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rbreast">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="thor">
+					<apply>true</apply>
+					<weight>3</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- PELVIS: high weight (anchors the model)      -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="lasis">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rasis">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lpsis">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rpsis">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="mhip">
+					<apply>true</apply>
+					<weight>10</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="pelv">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lhip">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rhip">
+					<apply>true</apply>
+					<weight>25</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lwaist">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rwaist">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lbum">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rbum">
+					<apply>true</apply>
+					<weight>2</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- LEFT ARM                                     -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="lshom">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lsho">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lupperarm">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lelbm">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lelbinner">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lelb">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lforearm">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lwrithumbside">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lwripinkieside">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lwri">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- RIGHT ARM                                    -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="rshom">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rsho">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rupperarm">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="relbm">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="relbinner">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="relb">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rforearm">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rwrithumbside">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rwripinkieside">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rwri">
+					<apply>true</apply>
+					<weight>5</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- HANDS: low weight                            -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="lfin">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lthumb">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lhan">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfin">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rthumb">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rhan">
+					<apply>true</apply>
+					<weight>1</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- LEFT LEG: high weight (critical for gait)    -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="lfrontthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfrontinnerthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lknem">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="linnerknee">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lkne">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lshin">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lankm">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lank">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- RIGHT LEG                                    -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="rfrontthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfrontinnerthigh">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rknem">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rinnerknee">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rkne">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rshin">
+					<apply>true</apply>
+					<weight>4</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rankm">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rank">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- LEFT FOOT: high weight                       -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="lhee">
+					<apply>true</apply>
+					<weight>60</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfifthmetatarsal">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="ltoe">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfirstmetatarsal">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfourthtoe">
+					<apply>true</apply>
+					<weight>10</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="lfoo">
+					<apply>true</apply>
+					<weight>15</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- RIGHT FOOT                                   -->
+				<!-- ============================================ -->
+				<IKMarkerTask name="rhee">
+					<apply>true</apply>
+					<weight>60</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfifthmetatarsal">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rtoe">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfirstmetatarsal">
+					<apply>true</apply>
+					<weight>30</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfourthtoe">
+					<apply>true</apply>
+					<weight>10</weight>
+				</IKMarkerTask>
+				<IKMarkerTask name="rfoo">
+					<apply>true</apply>
+					<weight>15</weight>
+				</IKMarkerTask>
+
+				<!-- ============================================ -->
+				<!-- COORDINATE TASK: lumbar constraint            -->
+				<!-- ============================================ -->
+				<IKCoordinateTask name="L5_S1_Flex_Ext">
+					<apply>true</apply>
+					<weight>0.1</weight>
+					<value_type>default_value</value_type>
+					<value>0</value>
+				</IKCoordinateTask>
+
+			</objects>
+			<groups />
+		</IKTaskSet>
+		<marker_file>Unassigned</marker_file>
+		<coordinate_file>Unassigned</coordinate_file>
+		<report_marker_locations>false</report_marker_locations>
+	</InverseKinematicsTool>
+</OpenSimDocument>
