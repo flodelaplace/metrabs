@@ -21,6 +21,10 @@ dependencies:
   - tqdm
   - conda-forge::mayavi
   - conda-forge::ffmpeg-python
+  - conda-forge::cudatoolkit=11.8
+  - conda-forge::cudnn=8.9
+  # OpenSim (optional, only needed for --ik flag):
+  # conda install -c opensim-org opensim
   - pip:
     - attrdict
     - tensorflow==2.12.0
