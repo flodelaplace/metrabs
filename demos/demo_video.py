@@ -18,14 +18,27 @@ import cameralib
 import poseviz
 
 
+def _parse_float_list(s):
+    """Parse '1.75' or '1.60,1.65,1.70' to a list of floats."""
+    return [float(x.strip()) for x in s.split(',') if x.strip()]
+
+
 def main():
     parser = argparse.ArgumentParser(description='MeTRAbs 3D pose estimation from video')
     parser.add_argument('video', help='Path to video file or URL')
     parser.add_argument('--ik', action='store_true', help='Run OpenSim Inverse Kinematics after pose estimation')
     parser.add_argument('--multi_person', action='store_true', help='Track and export all persons separately')
     parser.add_argument('--stationary', action='store_true', help='Fix horizontal drift (person stays centered, useful for any stationary-camera movement)')
-    parser.add_argument('--mass', type=float, default=69, help='Subject mass in kg (for IK scaling, default: 69)')
-    parser.add_argument('--height', type=float, default=1.75, help='Subject height in meters (for IK scaling, default: 1.75)')
+    parser.add_argument('--combined_trc', action='store_true', help='In multi-person mode, also output a single combined TRC with all persons (markers suffixed p0_, p1_, ...)')
+    parser.add_argument('--min_track_seconds', type=float, default=2.0, help='Minimum track duration in seconds for multi-person mode (default: 2.0)')
+    parser.add_argument('--mass', type=float, default=69,
+                        help='Subject mass in kg (single-person mode). Default: 69')
+    parser.add_argument('--height', type=float, default=1.75,
+                        help='Subject height in meters (single-person mode). Default: 1.75')
+    parser.add_argument('--person_masses', type=str, default=None,
+                        help='Comma-separated masses in kg for multi-person mode, sorted left-to-right on first frame (e.g. "60,65,70,75,80,85")')
+    parser.add_argument('--person_heights', type=str, default=None,
+                        help='Comma-separated heights in meters for multi-person mode, sorted left-to-right on first frame (e.g. "1.62,1.64,1.61,1.70,1.78,1.75")')
     args = parser.parse_args()
 
     USE_POSEVIZ = False
@@ -72,6 +85,9 @@ def main():
         )
         tracks = {}  # person_id -> {frames, poses3d, poses2d, confidences}
         frame_idx = 0
+        _dbg_total_detections = 0
+        _dbg_total_tracked = 0
+        _dbg_empty_frames = 0
     else:
         all_poses3d = []
         all_poses2d = []
@@ -89,17 +105,25 @@ def main():
             poses3d_np = poses3d.numpy()
             poses2d_np = poses2d.numpy()
 
+            # Convert boxes from [x, y, w, h, conf] to [x1, y1, x2, y2, conf]
+            if len(boxes_np) > 0:
+                boxes_np = boxes_np.copy()
+                boxes_np[:, 2] = boxes_np[:, 0] + boxes_np[:, 2]  # x2 = x + w
+                boxes_np[:, 3] = boxes_np[:, 1] + boxes_np[:, 3]  # y2 = y + h
+
             if USE_POSEVIZ:
                 viz.update(frame=frame, boxes=boxes, poses=poses3d, camera=camera)
 
             if args.multi_person:
                 # Track all persons
                 if len(boxes_np) > 0:
+                    _dbg_total_detections += len(boxes_np)
                     detections = sv.Detections(
                         xyxy=boxes_np[:, :4],
                         confidence=boxes_np[:, 4],
                     )
                     tracked = tracker.update_with_detections(detections)
+                    _dbg_total_tracked += len(tracked)
 
                     for j in range(len(tracked)):
                         # Match tracked box back to original detection by closest distance
@@ -113,6 +137,9 @@ def main():
                         tracks[pid]["poses3d"].append(poses3d_np[orig_idx])
                         tracks[pid]["poses2d"].append(poses2d_np[orig_idx])
                         tracks[pid]["confidences"].append(float(boxes_np[orig_idx, 4]))
+
+                else:
+                    _dbg_empty_frames += 1
 
                 frame_idx += 1
 
@@ -139,6 +166,12 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.multi_person:
+        print(f"\nDiagnostic tracking:")
+        print(f"  Total frames: {frame_idx}")
+        print(f"  Frames with detections: {frame_idx - _dbg_empty_frames}/{frame_idx}")
+        print(f"  Total raw detections: {_dbg_total_detections}")
+        print(f"  Total tracked detections: {_dbg_total_tracked}")
+        print(f"  Avg detections/frame: {_dbg_total_detections / max(1, frame_idx - _dbg_empty_frames):.1f}")
         export_multi_person(tracks, frame_idx, joint_names, fps, output_dir, args)
     else:
         export_single_person(all_poses3d, all_poses2d, all_confidences, joint_names, fps, output_dir, args)
@@ -173,18 +206,44 @@ def export_single_person(all_poses3d, all_poses2d, all_confidences, joint_names,
 
 
 def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args):
-    """Export multi-person results: one subfolder per tracked person."""
-    num_joints = len(joint_names)
-    min_track_frames = max(5, int(fps / 2))  # skip tracks shorter than 0.5 seconds
+    """Export multi-person results: one subfolder per tracked person.
 
-    # Sort tracks by first appearance
-    sorted_tracks = sorted(tracks.items(), key=lambda kv: kv[1]["frames"][0])
+    Persons are sorted left-to-right based on their pelvis X position on their
+    first detected frame, matching the order of --person_heights/--person_masses.
+    """
+    num_joints = len(joint_names)
+    min_track_frames = max(5, int(fps * args.min_track_seconds))
+    exported_tracks = []  # collect (person_count, poses3d_list, start_frame, end_frame) for combined TRC
+
+    # Parse per-person height/mass lists (fall back to single --height/--mass)
+    person_heights = _parse_float_list(args.person_heights) if args.person_heights else None
+    person_masses = _parse_float_list(args.person_masses) if args.person_masses else None
+    if person_heights:
+        print(f"  Heights per person (left→right): {person_heights}")
+    if person_masses:
+        print(f"  Masses per person (left→right): {person_masses}")
+
+    # Find pelvis joint index for sorting
+    joint_list = list(joint_names)
+    pelv_i = _joint_idx(joint_list, 'pelv', 'mhip')
+    if pelv_i is None:
+        pelv_i = 0  # fallback
+
+    def track_first_x(track):
+        """X position of pelvis on the track's first detected frame (for sorting)."""
+        if not track["poses2d"]:
+            return 0.0
+        return float(track["poses2d"][0][pelv_i, 0])
+
+    # Sort tracks left-to-right by X position on first detected frame
+    sorted_tracks = sorted(tracks.items(), key=lambda kv: track_first_x(kv[1]))
 
     # Diagnostic
-    print(f"\nTracking: {len(tracks)} track(s) trouvé(s)")
+    print(f"\nTracking: {len(tracks)} track(s) trouvé(s) (triés gauche→droite)")
     for tid, t in sorted_tracks:
+        x_first = track_first_x(t)
         print(f"  track {tid}: {len(t['frames'])} frames "
-              f"(range {t['frames'][0]}-{t['frames'][-1]})"
+              f"(range {t['frames'][0]}-{t['frames'][-1]}, x={x_first:.0f}px)"
               f"{' [SKIPPED < ' + str(min_track_frames) + ' frames]' if len(t['frames']) < min_track_frames else ''}")
 
     person_count = 0
@@ -193,6 +252,10 @@ def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args
     for track_id, track in sorted_tracks:
         if len(track["frames"]) < min_track_frames:
             continue
+
+        # Get per-person height/mass (fall back to --height/--mass defaults)
+        this_height = person_heights[person_count] if person_heights and person_count < len(person_heights) else args.height
+        this_mass = person_masses[person_count] if person_masses and person_count < len(person_masses) else args.mass
 
         # Build continuous pose array with interpolation
         poses3d_interp, start_frame, end_frame = interpolate_track(
@@ -203,9 +266,9 @@ def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args
         # Wrap as list of (1, 87, 3) arrays for compatibility with existing functions
         poses3d_list = [poses3d_interp[i:i + 1] for i in range(len(poses3d_interp))]
 
-        # Filter then reorient and ground-calibrate (per person)
+        # Filter then reorient and ground-calibrate (per person, using this_height)
         poses3d_list = butterworth_filter_poses(poses3d_list, fps, cutoff_freq=6.0)
-        poses3d_list = reorient_and_ground(poses3d_list, joint_names, subject_height=args.height)
+        poses3d_list = reorient_and_ground(poses3d_list, joint_names, subject_height=this_height)
         if args.stationary:
             poses3d_list = stabilize_jump(poses3d_list, list(joint_names), fps)
 
@@ -233,6 +296,10 @@ def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args
         save_to_json(person_dir / "results.json", poses3d_list, poses2d_list, conf_list,
                      joint_names, fps, start_frame=start_frame)
 
+        # Keep data for combined TRC
+        if args.combined_trc:
+            exported_tracks.append((person_count, poses3d_list, start_frame, end_frame))
+
         n_detected = len(track["frames"])
         n_total = end_frame - start_frame + 1
         n_interp = n_total - n_detected
@@ -243,6 +310,8 @@ def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args
             "end_frame": end_frame,
             "frames_detected": n_detected,
             "frames_interpolated": n_interp,
+            "height_m": this_height,
+            "mass_kg": this_mass,
         })
 
         print(f"  person_{person_count}/ : frames {start_frame}-{end_frame} "
@@ -253,16 +322,22 @@ def export_multi_person(tracks, total_frames, joint_names, fps, output_dir, args
             scaled_model, mot_file = run_kinematics(
                 trc_file=person_dir / "poses3d.trc",
                 output_dir=person_dir,
-                subject_mass=args.mass,
-                subject_height=args.height,
+                subject_mass=this_mass,
+                subject_height=this_height,
             )
-            print(f"    - {scaled_model.name} + {mot_file.name}")
+            print(f"    - {scaled_model.name} + {mot_file.name} (mass={this_mass}kg, height={this_height}m)")
 
         person_count += 1
 
     # Save summary
     with open(output_dir / "summary.json", 'w') as f:
         json.dump(summary, f, indent=2)
+
+    # Combined TRC (all persons in one file, markers prefixed p<N>_)
+    if args.combined_trc and exported_tracks:
+        save_combined_trc(output_dir / "poses3d_combined.trc", exported_tracks,
+                          joint_names, fps, total_frames)
+        print(f"  poses3d_combined.trc : all {person_count} persons in one file")
 
     print(f"\nTerminé ! {person_count} personne(s) exportée(s) dans : {output_dir}/")
 
@@ -358,7 +433,9 @@ def butterworth_filter_poses(all_poses3d, fps, cutoff_freq=6.0, order=4):
         Filtered all_poses3d (same structure).
     """
     num_frames = len(all_poses3d)
-    if num_frames < 12:  # need enough frames for filtfilt padding
+    # filtfilt needs signal length > 3*max(len(a), len(b)) = 3*(order+1) for order-N Butterworth
+    min_frames_needed = 3 * (order + 1) + 2
+    if num_frames < min_frames_needed:
         return all_poses3d
 
     # Only filter first person per frame (consistent with TRC export)
@@ -376,7 +453,7 @@ def butterworth_filter_poses(all_poses3d, fps, cutoff_freq=6.0, order=4):
             valid[i] = False
 
     # If too many missing frames, skip filtering
-    if valid.sum() < 12:
+    if valid.sum() < min_frames_needed:
         return all_poses3d
 
     # Fill missing frames with linear interp before filtering (filtfilt needs continuous data)
@@ -851,6 +928,53 @@ def save_to_trc(filepath, poses3d, joint_names, fps=30.0, start_frame=0):
 
             for j in range(num_markers):
                 x, y, z = pose[j]
+                f.write(f"{x:.3f}\t{y:.3f}\t{z:.3f}\t")
+            f.write("\n")
+
+
+def save_combined_trc(filepath, exported_tracks, joint_names, fps, total_frames):
+    """Save a single TRC file combining all tracked persons.
+
+    Markers are prefixed with p<N>_ (e.g. p0_backneck, p1_backneck, ...).
+    For frames where a person isn't present, their markers are set to 0.
+    """
+    num_persons = len(exported_tracks)
+    num_joints = len(joint_names)
+    num_markers = num_persons * num_joints
+
+    # Build full-length data: shape (total_frames, num_markers, 3)
+    data = np.zeros((total_frames, num_markers, 3))
+    marker_names = []
+
+    for pidx, (pcount, poses3d_list, start_f, end_f) in enumerate(exported_tracks):
+        for j, name in enumerate(joint_names):
+            marker_names.append(f"p{pcount}_{name}")
+        for fi, frame_poses in enumerate(poses3d_list):
+            abs_f = start_f + fi
+            if abs_f < total_frames and len(frame_poses) > 0:
+                data[abs_f, pidx * num_joints:(pidx + 1) * num_joints] = frame_poses[0]
+
+    with open(filepath, 'w') as f:
+        f.write(f"PathFileType\t4\t(X/Y/Z)\t{filepath}\n")
+        f.write("DataRate\tCameraRate\tNumFrames\tNumMarkers\tUnits\tOrigDataRate\tOrigDataStartFrame\tOrigNumFrames\n")
+        f.write(f"{fps}\t{fps}\t{total_frames}\t{num_markers}\tmm\t{fps}\t1\t{total_frames}\n")
+
+        f.write("Frame#\tTime\t")
+        for name in marker_names:
+            f.write(f"{name}\t\t\t")
+        f.write("\n")
+
+        f.write("\t\t")
+        for i in range(num_markers):
+            n = i + 1
+            f.write(f"X{n}\tY{n}\tZ{n}\t")
+        f.write("\n\n")
+
+        for i in range(total_frames):
+            t = i / fps
+            f.write(f"{i + 1}\t{t:.5f}\t")
+            for j in range(num_markers):
+                x, y, z = data[i, j]
                 f.write(f"{x:.3f}\t{y:.3f}\t{z:.3f}\t")
             f.write("\n")
 

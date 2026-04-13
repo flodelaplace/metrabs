@@ -14,7 +14,9 @@ Fork of [isarandi/metrabs](https://github.com/isarandi/metrabs) for extracting 3
 | **TRC export** | OpenSim-compatible marker file |
 | **JSON export** | Full data: poses3d, poses2d, detection confidence |
 | **OpenSim IK** | Automatic scaling + Inverse Kinematics (`--ik`) |
-| **Multi-person** | ByteTrack tracking with per-person output (`--multi_person`) |
+| **Multi-person** | ByteTrack tracking with per-person output (`--multi_person`), sorted left-to-right |
+| **Per-person anthropometry** | Specify height/mass per person with `--person_heights`/`--person_masses` |
+| **Combined TRC** | Single TRC with all persons (markers prefixed `p0_`, `p1_`, ...) for easy visualization (`--combined_trc`) |
 | **Butterworth filter** | 6 Hz low-pass, zero-phase (biomechanics standard) |
 | **Auto-straighten** | Vertical calibration from standing frames |
 | **Height rescaling** | Scale TRC to real subject height (`--height`) |
@@ -125,7 +127,12 @@ python demos/demo_video.py video.mp4 --stationary --ik --height 1.80 --mass 75
 
 ```
 usage: demo_video.py [-h] [--ik] [--multi_person] [--stationary]
-                     [--mass MASS] [--height HEIGHT] video
+                     [--combined_trc]
+                     [--min_track_seconds MIN_TRACK_SECONDS]
+                     [--mass MASS] [--height HEIGHT]
+                     [--person_masses PERSON_MASSES]
+                     [--person_heights PERSON_HEIGHTS]
+                     video
 
 positional arguments:
   video                  Path to video file or URL
@@ -135,9 +142,32 @@ optional arguments:
   --ik                   Run OpenSim scaling + Inverse Kinematics
   --multi_person         Track and export all persons separately (ByteTrack)
   --stationary           Fix horizontal drift (centers pelvis, detects flight phases)
-  --mass MASS            Subject mass in kg (default: 69)
-  --height HEIGHT        Subject height in meters (default: 1.75)
+  --combined_trc         Multi-person: also output a single combined TRC
+                         (markers prefixed p0_, p1_, ...)
+  --min_track_seconds N  Minimum track duration in seconds for multi-person
+                         (default: 2.0; raise for noisy long videos)
+  --mass MASS            Subject mass in kg, single-person (default: 69)
+  --height HEIGHT        Subject height in meters, single-person (default: 1.75)
+  --person_masses LIST   Multi-person: comma-separated masses in kg, sorted
+                         left-to-right by pelvis X on first detected frame
+                         (e.g. "55,60,58,70,80,75")
+  --person_heights LIST  Multi-person: comma-separated heights in meters,
+                         sorted left-to-right (e.g. "1.62,1.64,1.61,1.70,1.78,1.75")
 ```
+
+### Per-person heights and masses (multi-person)
+
+In `--multi_person` mode, persons are sorted **left-to-right** by their pelvis X position on their first detected frame. The lists `--person_heights` and `--person_masses` follow this order:
+
+```bash
+# 6 people, heights and masses left-to-right
+python demos/demo_video.py video.mp4 \
+    --multi_person --ik --combined_trc \
+    --person_heights 1.62,1.64,1.61,1.70,1.78,1.75 \
+    --person_masses 55,60,58,70,80,75
+```
+
+If the list is shorter than the number of detected persons, extras fall back to `--height` / `--mass`. The order is logged at runtime and saved in `summary.json` per person.
 
 ### Examples
 
@@ -145,11 +175,19 @@ optional arguments:
 # Simple extraction
 python demos/demo_video.py img/WhatsAppVideoSquat.mp4
 
-# Full biomechanics pipeline
+# Full biomechanics pipeline (single person)
 python demos/demo_video.py img/video.mp4 --ik --height 1.85 --mass 80 --stationary
 
-# Multi-person with IK per person
+# Multi-person with IK per person (same height/mass for all)
 python demos/demo_video.py img/video.mp4 --multi_person --ik --height 1.75 --mass 70
+
+# Multi-person with per-person anthropometry + combined TRC for visualization
+python demos/demo_video.py img/video.mp4 --multi_person --ik --combined_trc \
+    --person_heights 1.62,1.64,1.61,1.70,1.78,1.75 \
+    --person_masses 55,60,58,70,80,75
+
+# Long noisy video: keep only tracks longer than 5 seconds
+python demos/demo_video.py img/video.mp4 --multi_person --min_track_seconds 5
 ```
 
 ---
@@ -170,15 +208,18 @@ output/<video_name>_<YYYYMMDD_HHMMSS>/
 
 ```
 output/<video_name>_<YYYYMMDD_HHMMSS>/
-    summary.json             # Track info (frames, durations, interpolation stats)
-    person_0/
+    summary.json                 # Track info (frames, durations, height, mass per person)
+    poses3d_combined.trc         # All persons in one TRC (if --combined_trc)
+    person_0/                    # Leftmost person on first frame
         poses3d.trc
         results.json
-        poses3d_scaled.osim  (if --ik)
-        poses3d_ik.mot       (if --ik)
-    person_1/
+        poses3d_scaled.osim      (if --ik)
+        poses3d_ik.mot           (if --ik)
+    person_1/                    # Next person to the right
         ...
 ```
+
+**Combined TRC** (`--combined_trc`): a single `poses3d_combined.trc` aggregating all persons. Each marker is prefixed with the person index (e.g. `p0_backneck`, `p1_backneck`, ...). Total markers = N_persons × 87. Useful for visualizing all persons simultaneously in OpenSim GUI or other TRC viewers. Note: this combined TRC is **not** suitable for OpenSim IK (use the per-person `poses3d.trc` files for IK).
 
 ### JSON structure
 
